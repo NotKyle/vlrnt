@@ -35,15 +35,16 @@ func Scrape(url string) error {
 		return err
 	}
 
+	fmt.Println("Domain:", domain)
+	fmt.Println("TLD:", tld)
+	fmt.Println("Path:", path)
+	fmt.Println("Method:", method)
+
 	subdomain, err := utils.GetSubDomain(url)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Domain:", domain)
-	fmt.Println("TLD:", tld)
-	fmt.Println("Path:", path)
-	fmt.Println("Method:", method)
 	fmt.Println("Subodmain:", subdomain)
 
 	return nil
