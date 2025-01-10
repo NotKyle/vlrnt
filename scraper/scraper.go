@@ -1,51 +1,134 @@
 package scraper
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/gocolly/colly"
 	"notkyle.org/vlrnt/utils"
 )
+
+type Match struct {
+	Url, Team1, Team2 string
+}
 
 func Scrape(url string) error {
 	if url == "" {
 		return errors.New("url cannot be empty")
 	}
 
+	var matches []Match
+
 	fmt.Println("Scraping", url)
 
-	// urlParts := strings.Split(url, "/")
-	method, err := utils.GetMethod(url)
+	// Remove path
+	path, _ := utils.GetPath(url)
+	urlnopath := strings.ReplaceAll(url, path, "")
 
-	if err != nil {
-		return err
-	}
+	// Add URL to allowed domains
+	c := colly.NewCollector(
+		colly.AllowedDomains(
+			"https://www.vlr.gg",
+			"www.vlr.gg",
+			"vlr.gg",
+			"https://www.vlr.gg/",
+			"www.vlr.gg/",
+			"vlr.gg/",
+		),
+	)
 
-	domain, err := utils.GetDomain(url)
-	if err != nil {
-		return err
-	}
+	fmt.Println("Allowed domains:", urlnopath)
 
-	tld, err := utils.GetTLD(url)
-	if err != nil {
-		return err
-	}
+	fmt.Println("Final URL:", urlnopath)
 
-	path, err := utils.GetPath(url)
-	if err != nil {
-		return err
-	}
+	fmt.Println("c", c)
 
-	fmt.Println("Domain:", domain)
-	fmt.Println("TLD:", tld)
-	fmt.Println("Path:", path)
-	fmt.Println("Method:", method)
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting", r.URL)
+	})
 
-	subdomain, err := utils.GetSubDomain(url)
-	if err != nil {
-		return err
-	}
+	// triggered when the scraper encounters an error
+	c.OnError(func(_ *colly.Response, err error) {
+		fmt.Println("Something went wrong: ", err)
+	})
 
-	fmt.Println("Subodmain:", subdomain)
+	// fired when the server responds
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Println("Page visited: ", r.Request.URL)
+	})
+
+	// triggered when a CSS selector matches an element
+	c.OnHTML("a.match-item", func(e *colly.HTMLElement) {
+		match := Match{}
+
+		match.Url = e.Attr("href")
+
+		goquerySelection := e.DOM
+		teams := goquerySelection.Find("div.match-item-vs")
+
+		// Example Goquery usage
+
+		teams.Each(func(i int, s *goquery.Selection) {
+			teamName := goquerySelection.Find(".match-item-vs-team-name>.text-of").Text()
+
+			if i == 0 {
+				match.Team1 = teamName
+			} else {
+				match.Team2 = teamName
+			}
+		})
+
+		// for _, team := range teams {
+		// 	teamName := goquerySelection.Find(".match-item-vs-team-name>.text-of").Text()
+		// 	fmt.Println("Team name:", teamName)
+		// }
+
+		matches = append(matches, match)
+	})
+
+	// triggered once scraping is done (e.g., write the data to a CSV file)
+	c.OnScraped(func(r *colly.Response) {
+		file, err := os.Create("matches.csv")
+
+		if err != nil {
+			log.Fatal("Cannot create file", err)
+		}
+
+		defer file.Close()
+
+		writer := csv.NewWriter(file)
+
+		headers := []string{
+			"Url",
+			"Team1",
+			"Team2",
+		}
+
+		writer.Write(headers)
+
+		for _, match := range matches {
+			record := []string{
+				match.Url,
+				match.Team1,
+				match.Team2,
+			}
+
+			writer.Write(record)
+		}
+
+		defer writer.Flush()
+	})
+
+	fmt.Println("Visiting", url)
+
+	c.Visit(url)
+
+	fmt.Println("Scraping complete")
 
 	return nil
 }
