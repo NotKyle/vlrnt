@@ -69,12 +69,16 @@ func Scrape(url string) error {
 		match.Url = e.Attr("href")
 
 		goquerySelection := e.DOM
-		teams := goquerySelection.Find("div.match-item-vs")
+		teams := goquerySelection.Find("div.match-item-vs>.match-item-vs-team")
 
 		// Example Goquery usage
 
 		teams.Each(func(i int, s *goquery.Selection) {
-			teamName := goquerySelection.Find(".match-item-vs-team-name>.text-of").Text()
+			teamName := s.Find(".match-item-vs-team-name>.text-of").Text()
+
+			fmt.Println("Team name:", teamName)
+			fmt.Println("Match URL:", match.Url)
+			fmt.Println("Match number:", i)
 
 			if i == 0 {
 				match.Team1 = teamName
