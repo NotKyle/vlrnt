@@ -225,3 +225,17 @@ func AddTeam(db *sql.DB, team structs.Team) error {
 	}
 	return nil
 }
+
+func SetupDB() {
+	database, err := Open()
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = CreateTables(database)
+
+	if err != nil {
+		panic(err)
+	}
+}

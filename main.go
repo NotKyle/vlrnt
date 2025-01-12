@@ -40,20 +40,6 @@ func main() {
 	DoMatches()
 }
 
-func CreateDB() {
-	database, err := db.Open()
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.CreateTables(database)
-
-	if err != nil {
-		panic(err)
-	}
-}
-
 func DoMatches() {
 	database, err := db.Open()
 
