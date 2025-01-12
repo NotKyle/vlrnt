@@ -1,1 +1,5 @@
 .env
+*.sql
+migrations/*
+*.sqlite
+*.csv

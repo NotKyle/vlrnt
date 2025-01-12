@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 )
@@ -89,4 +90,15 @@ func GetSubDomain(url string) (string, error) {
 	subDomain := domainParts[0]
 
 	return subDomain, nil
+}
+
+// Convert Struct to JSON
+func AsJson(obj interface{}) (string, error) {
+	json, err := json.Marshal(obj)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(json), nil
 }

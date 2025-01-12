@@ -10,25 +10,21 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
-	"notkyle.org/vlrnt/utils"
-)
+	"notkyle.org/vlrnt/db"
 
-type Match struct {
-	Url, Team1, Team2 string
-}
+	"notkyle.org/vlrnt/structs"
+)
 
 func Scrape(url string) error {
 	if url == "" {
 		return errors.New("url cannot be empty")
 	}
 
-	var matches []Match
-
-	fmt.Println("Scraping", url)
+	var matches []structs.Match
 
 	// Remove path
-	path, _ := utils.GetPath(url)
-	urlnopath := strings.ReplaceAll(url, path, "")
+	// path, _ := utils.GetPath(url)
+	// urlnopath := strings.ReplaceAll(url, path, "")
 
 	// Add URL to allowed domains
 	c := colly.NewCollector(
@@ -42,14 +38,7 @@ func Scrape(url string) error {
 		),
 	)
 
-	fmt.Println("Allowed domains:", urlnopath)
-
-	fmt.Println("Final URL:", urlnopath)
-
-	fmt.Println("c", c)
-
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
 	})
 
 	// triggered when the scraper encounters an error
@@ -59,14 +48,13 @@ func Scrape(url string) error {
 
 	// fired when the server responds
 	c.OnResponse(func(r *colly.Response) {
-		fmt.Println("Page visited: ", r.Request.URL)
 	})
 
 	// triggered when a CSS selector matches an element
 	c.OnHTML("a.match-item", func(e *colly.HTMLElement) {
-		match := Match{}
+		match := structs.Match{}
 
-		match.Url = e.Attr("href")
+		match.URL = e.Attr("href")
 
 		goquerySelection := e.DOM
 		teams := goquerySelection.Find("div.match-item-vs>.match-item-vs-team")
@@ -76,21 +64,24 @@ func Scrape(url string) error {
 		teams.Each(func(i int, s *goquery.Selection) {
 			teamName := s.Find(".match-item-vs-team-name>.text-of").Text()
 
-			fmt.Println("Team name:", teamName)
-			fmt.Println("Match URL:", match.Url)
-			fmt.Println("Match number:", i)
+			// fmt.Println("Team name:", teamName)
+			// fmt.Println("Match URL:", match.URL)
+			// fmt.Println("Match number:", i)
+
+			teamName = strings.TrimSpace(teamName)
+
+			team := structs.Team{
+				ID:      i,
+				Name:    teamName,
+				Players: []structs.Player{},
+			}
 
 			if i == 0 {
-				match.Team1 = teamName
+				match.Team1 = team
 			} else {
-				match.Team2 = teamName
+				match.Team2 = team
 			}
 		})
-
-		// for _, team := range teams {
-		// 	teamName := goquerySelection.Find(".match-item-vs-team-name>.text-of").Text()
-		// 	fmt.Println("Team name:", teamName)
-		// }
 
 		matches = append(matches, match)
 	})
@@ -108,19 +99,29 @@ func Scrape(url string) error {
 		writer := csv.NewWriter(file)
 
 		headers := []string{
-			"Url",
+			"URL",
 			"Team1",
 			"Team2",
 		}
 
 		writer.Write(headers)
 
+		databse, err := db.Open()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		for _, match := range matches {
 			record := []string{
-				match.Url,
-				match.Team1,
-				match.Team2,
+				match.URL,
+				match.Team1.Name,
+				match.Team2.Name,
 			}
+
+			// Add to database
+			// fmt.Println("Adding match to database", match)
+			db.AddMatch(databse, match)
 
 			writer.Write(record)
 		}
@@ -128,11 +129,11 @@ func Scrape(url string) error {
 		defer writer.Flush()
 	})
 
-	fmt.Println("Visiting", url)
+	// fmt.Println("Visiting", url)
 
 	c.Visit(url)
 
-	fmt.Println("Scraping complete")
+	// fmt.Println("Scraping complete")
 
 	return nil
 }
