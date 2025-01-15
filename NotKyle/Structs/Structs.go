@@ -40,8 +40,9 @@ type Map struct {
 }
 
 type Match struct {
-	ID  int    `sql:"primary_key"`
-	URL string `sql:"type:text"`
+	ID    int    `sql:"int"`
+	VLRID string `sql:"primary_key"`
+	URL   string `sql:"type:text"`
 
 	Team1 Team `sql:"int"`
 	Team2 Team `sql:"int"`

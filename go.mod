@@ -8,6 +8,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	notkyle.org/vlrnt/db v0.0.0-00010101000000-000000000000
 	notkyle.org/vlrnt/scraper v0.0.0-00010101000000-000000000000
+	notkyle.org/vlrnt/utils v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -57,6 +58,7 @@ require (
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240617180043-68d350f18fd4 // indirect
@@ -72,7 +74,6 @@ require (
 	modernc.org/strutil v1.2.0 // indirect
 	modernc.org/token v1.1.0 // indirect
 	notkyle.org/vlrnt/structs v0.0.0-00010101000000-000000000000 // indirect
-	notkyle.org/vlrnt/utils v0.0.0-00010101000000-000000000000 // indirect
 )
 
 replace notkyle.org/vlrnt/utils => ./utils

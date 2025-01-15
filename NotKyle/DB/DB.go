@@ -135,8 +135,8 @@ func AddMatch(db *sql.DB, match structs.Match) error {
 	id = id + 1
 
 	_, err := db.Exec(
-		"INSERT INTO match (id, url, team1, team2, start_time, end_time, final_score, duration, region, winning_team, losing_team, map_pick) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		id, match.URL, match.Team1.Name, match.Team2.Name, match.StartTime, match.EndTime, 0, 0, 0, "", "", "",
+		"INSERT INTO match (id, vlrid, url, team1, team2, start_time, end_time, final_score, duration, region, winning_team, losing_team, map_pick) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, match.VLRID, match.URL, match.Team1.Name, match.Team2.Name, match.StartTime, match.EndTime, 0, 0, 0, "", "", "",
 	)
 
 	// fmt.Println("[2] Added match to database", res)
@@ -152,8 +152,18 @@ func AddMatch(db *sql.DB, match structs.Match) error {
 
 func GetMatch(db *sql.DB, url string) (structs.Match, error) {
 	var match structs.Match
-	row := db.QueryRow("SELECT id, url, team1, team2, start_time, end_time FROM match WHERE url = ?", url)
-	err := row.Scan(&match.ID, &match.URL, &match.Team1, &match.Team2, &match.StartTime, &match.EndTime)
+	row := db.QueryRow("SELECT id, vlrid, url, team1, team2, start_time, end_time FROM match WHERE url = ?", url)
+
+	err := row.Scan(
+		&match.ID,
+		&match.VLRID,
+		&match.URL,
+		&match.Team1.Name,
+		&match.Team2.Name,
+		&match.StartTime,
+		&match.EndTime,
+	)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("No match found for URL: %s", url)
@@ -168,7 +178,16 @@ func GetMatchByID(db *sql.DB, ID int) (structs.Match, error) {
 	var match structs.Match
 
 	row := db.QueryRow("SELECT id, url, team1, team2, start_time, end_time FROM match WHERE id = ?", ID)
-	err := row.Scan(&match.ID, &match.URL, &match.Team1, &match.Team2, &match.StartTime, &match.EndTime)
+
+	err := row.Scan(
+		&match.ID,
+		&match.VLRID,
+		&match.URL,
+		&match.Team1.Name,
+		&match.Team2.Name,
+		&match.StartTime,
+		&match.EndTime,
+	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -182,17 +201,28 @@ func GetMatchByID(db *sql.DB, ID int) (structs.Match, error) {
 }
 
 func GetMatches(db *sql.DB) ([]structs.Match, error) {
-	rows, err := db.Query("SELECT id, url, team1, team2, start_time, end_time FROM match")
+	rows, err := db.Query("SELECT id, vlrid, url, team1, team2, start_time, end_time FROM match")
 
 	// Convert rows to structs
 	var matches []structs.Match
 
 	for rows.Next() {
 		var match structs.Match
-		err := rows.Scan(&match.ID, &match.URL, &match.Team1.Name, &match.Team2.Name, &match.StartTime, &match.EndTime)
+
+		err := rows.Scan(
+			&match.ID,
+			&match.VLRID,
+			&match.URL,
+			&match.Team1.Name,
+			&match.Team2.Name,
+			&match.StartTime,
+			&match.EndTime,
+		)
+
 		if err != nil {
-			return nil, fmt.Errorf("failed to get matches: %w", err)
+			return nil, fmt.Errorf("Failed to get matches: %w", err)
 		}
+
 		matches = append(matches, match)
 	}
 

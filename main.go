@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/joho/godotenv"
 
@@ -24,16 +25,11 @@ func main() {
 		panic(errors.New("No URL provided"))
 	}
 
-	if err != nil {
-		panic(err)
-	}
+	_, err = os.Stat("db.sqlite")
 
 	if err != nil {
-		panic(err)
+		db.CreateDB()
 	}
-
-	// Create DB
-	// CreateDB()
 
 	scraper.Scrape(url)
 
@@ -58,7 +54,7 @@ func DoMatches() {
 		panic(err)
 	}
 
-	// Convert matches to json array
+	// Convert matches to JSON array
 	for _, match := range matches {
 		var asJson string = ""
 

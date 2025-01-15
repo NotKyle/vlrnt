@@ -11,6 +11,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"notkyle.org/vlrnt/db"
+	"notkyle.org/vlrnt/utils"
 
 	"notkyle.org/vlrnt/structs"
 )
@@ -38,8 +39,7 @@ func Scrape(url string) error {
 		),
 	)
 
-	c.OnRequest(func(r *colly.Request) {
-	})
+	c.OnRequest(func(r *colly.Request) {})
 
 	// triggered when the scraper encounters an error
 	c.OnError(func(_ *colly.Response, err error) {
@@ -47,8 +47,7 @@ func Scrape(url string) error {
 	})
 
 	// fired when the server responds
-	c.OnResponse(func(r *colly.Response) {
-	})
+	c.OnResponse(func(r *colly.Response) {})
 
 	// triggered when a CSS selector matches an element
 	c.OnHTML("a.match-item", func(e *colly.HTMLElement) {
@@ -59,7 +58,16 @@ func Scrape(url string) error {
 		goquerySelection := e.DOM
 		teams := goquerySelection.Find("div.match-item-vs>.match-item-vs-team")
 
-		// Example Goquery usage
+		// Example GoQuery usage
+		urlParts, err := utils.GetPathParts(match.URL)
+
+		if err != nil || len(urlParts) == 0 {
+			fmt.Println("Error with urlParts")
+			os.Exit(0)
+		}
+
+		match.VLRID = urlParts[0]
+		// fmt.Println("Match VLRID:", match.VLRID)
 
 		teams.Each(func(i int, s *goquery.Selection) {
 			teamName := s.Find(".match-item-vs-team-name>.text-of").Text()
@@ -99,6 +107,7 @@ func Scrape(url string) error {
 		writer := csv.NewWriter(file)
 
 		headers := []string{
+			"VLRID",
 			"URL",
 			"Team1",
 			"Team2",
@@ -113,7 +122,9 @@ func Scrape(url string) error {
 		}
 
 		for _, match := range matches {
+
 			record := []string{
+				match.VLRID,
 				match.URL,
 				match.Team1.Name,
 				match.Team2.Name,
@@ -136,4 +147,8 @@ func Scrape(url string) error {
 	// fmt.Println("Scraping complete")
 
 	return nil
+}
+
+func PopTeams() {
+	// Somehow populate teams here..
 }

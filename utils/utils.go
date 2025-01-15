@@ -16,7 +16,7 @@ func GetMethod(url string) (string, error) {
 	return method, nil
 }
 
-func GetDomain(url string) (string, error) {
+func GetDomainName(url string) (string, error) {
 	if url == "" {
 		return "", errors.New("url cannot be empty")
 	}
@@ -37,7 +37,7 @@ func GetTLD(url string) (string, error) {
 		return "", errors.New("url cannot be empty")
 	}
 
-	domain, err := GetDomain(url)
+	domain, err := GetDomainName(url)
 
 	if err != nil {
 		return "", err
@@ -75,7 +75,7 @@ func GetSubDomain(url string) (string, error) {
 		return "", errors.New("url cannot be empty")
 	}
 
-	domain, err := GetDomain(url)
+	domain, err := GetDomainName(url)
 
 	if err != nil {
 		return "", err
@@ -90,6 +90,28 @@ func GetSubDomain(url string) (string, error) {
 	subDomain := domainParts[0]
 
 	return subDomain, nil
+}
+
+func GetPathParts(url string) ([]string, error) {
+
+	if url == "" {
+		return nil, errors.New("URL Not set")
+	}
+
+	partsRaw := strings.Split(url, "/")
+
+	var parts []string
+
+	for _, part := range partsRaw {
+		if part == "" {
+			continue
+		}
+
+		trimmed := strings.Trim(part, " ")
+		parts = append(parts, trimmed)
+	}
+
+	return parts, nil
 }
 
 // Convert Struct to JSON
